@@ -11,7 +11,7 @@ resource "aws_vpc" "vpc_a" {
   enable_dns_hostnames = true
   instance_tenancy     = "default"
 
-  tags = merge(var.project-tags, { Name = "${var.resource-name-tag}-vpc-a" }, )
+  tags = merge(var.ProjectTags, { Name = "${var.resource-name-tag}-vpc-a" }, )
 }
 
 #-------------------------------------
@@ -24,7 +24,7 @@ resource "aws_subnet" "public_a" {
   cidr_block        = cidrsubnet(var.vpc_cidr_a, each.value.newbits, each.value.netnum)
   availability_zone = data.aws_availability_zones.aws.names[each.value.az]
 
-  tags = merge(var.project-tags, { Name = "${var.resource-name-tag}-${each.value.name}" }, )
+  tags = merge(var.ProjectTags, { Name = "${var.resource-name-tag}-${each.value.name}" }, )
 }
 
 # private Subnet A
@@ -34,15 +34,15 @@ resource "aws_subnet" "private_a" {
   cidr_block        = cidrsubnet(var.vpc_cidr_a, each.value.newbits, each.value.netnum)
   availability_zone = data.aws_availability_zones.aws.names[each.value.az]
 
-  tags = merge(var.project-tags, { Name = "${var.resource-name-tag}-${each.value.name}" }, )
+  tags = merge(var.ProjectTags, { Name = "${var.resource-name-tag}-${each.value.name}" }, )
 }
 
 
 # Internet Gateway vpc A
-resource "aws_internet_gateway" "ig" {
+resource "aws_internet_gateway" "ig_a" {
   vpc_id = aws_vpc.vpc_a.id
 
-  tags = merge(var.project-tags, { Name = "${var.resource-name-tag}-ig-a" }, )
+  tags = merge(var.ProjectTags, { Name = "${var.resource-name-tag}-ig-a" }, )
 }
 
 # EIP for NAT Gateway A
@@ -53,9 +53,9 @@ resource "aws_eip" "nat_gateway_a" {
 # NAT Gateway A
 resource "aws_nat_gateway" "nat_gateway_a" {
   allocation_id = aws_eip.nat_gateway_a.id
-  subnet_id     = aws_subnet.public_a.id
+  subnet_id     = aws_subnet.public_a[0].id
 
-  tags = merge(var.project-tags, { Name = "${var.resource-name-tag}-ngw-b" }, )
+  tags = merge(var.ProjectTags, { Name = "${var.resource-name-tag}-ngw-b" }, )
 }
 
 #-------------------------------------
@@ -67,10 +67,10 @@ resource "aws_route_table" "public_route_table_a" {
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.ig.id
+    gateway_id = aws_internet_gateway.ig_a.id
   }
 
-  tags = merge(var.project-tags, { Name = "${var.resource-name-tag}-rtpub" }, )
+  tags = merge(var.ProjectTags, { Name = "${var.resource-name-tag}-rtpub" }, )
 }
 
 # Private Route Table 
@@ -82,19 +82,19 @@ resource "aws_route_table" "private_route_table_a" {
        nat_gateway_id = aws_nat_gateway.nat_gateway_a.id
   }
 
-  tags = merge(var.project-tags, { Name = "${var.resource-name-tag}-rtpriv" }, )
+  tags = merge(var.ProjectTags, { Name = "${var.resource-name-tag}-rtpriv" }, )
 }
 
 
 # Public Subnets Association A
-resource "aws_route_table_association" "public" {
+resource "aws_route_table_association" "public_a" {
   count          = length(var.PublicSubnet-List)
   subnet_id      = aws_subnet.public_a[count.index].id
   route_table_id = aws_route_table.public_route_table_a.id
 }
 
 # Private Subnets Association A
-resource "aws_route_table_association" "private" {
+resource "aws_route_table_association" "private_a" {
   count          = length(var.PrivateSubnet-List)
   subnet_id      = aws_subnet.private_a[count.index].id
   route_table_id = aws_route_table.private_route_table_a.id
@@ -110,7 +110,7 @@ resource "aws_vpc" "vpc_b" {
   enable_dns_hostnames = true
   instance_tenancy     = "default"
 
-  tags = merge(var.project-tags, { Name = "${var.resource-name-tag}-vpc-b" }, )
+  tags = merge(var.ProjectTags, { Name = "${var.resource-name-tag}-vpc-b" }, )
 }
 
 #------------------------------------
@@ -123,7 +123,7 @@ resource "aws_subnet" "public_b" {
   cidr_block        = cidrsubnet(var.vpc_cidr_b, each.value.newbits, each.value.netnum)
   availability_zone = data.aws_availability_zones.aws.names[each.value.az]
 
-  tags = merge(var.project-tags, { Name = "${var.resource-name-tag}-${each.value.name}" }, )
+  tags = merge(var.ProjectTags, { Name = "${var.resource-name-tag}-${each.value.name}" }, )
 }
 
 # private Subnet B
@@ -133,16 +133,16 @@ resource "aws_subnet" "private_b" {
   cidr_block        = cidrsubnet(var.vpc_cidr_b, each.value.newbits, each.value.netnum)
   availability_zone = data.aws_availability_zones.aws.names[each.value.az]
 
-  tags = merge(var.project-tags, { Name = "${var.resource-name-tag}-${each.value.name}" }, )
+  tags = merge(var.ProjectTags, { Name = "${var.resource-name-tag}-${each.value.name}" }, )
 }
 
 #------------------------
 # Internet Gateway vpc B
 #------------------------
-resource "aws_internet_gateway" "ig" {
+resource "aws_internet_gateway" "ig_b" {
   vpc_id = aws_vpc.vpc_b.id
 
-  tags = merge(var.project-tags, { Name = "${var.resource-name-tag}-ig-b" }, )
+  tags = merge(var.ProjectTags, { Name = "${var.resource-name-tag}-ig-b" }, )
 }
 
 # EIP for NAT Gateway B
@@ -153,59 +153,47 @@ resource "aws_eip" "nat_gateway_b" {
 # NAT Gateway B
 resource "aws_nat_gateway" "nat_gateway_b" {
   allocation_id = aws_eip.nat_gateway_b.id
-  subnet_id     = aws_subnet.public_b.id
+  subnet_id     = aws_subnet.public_a[0].id
 
-  tags = merge(var.project-tags, { Name = "${var.resource-name-tag}-ngw-b" }, )
+  tags = merge(var.ProjectTags, { Name = "${var.resource-name-tag}-ngw-b" }, )
 }
 
 #-------------------------------------
-# Route table Definition A
+# Route table Definition B
 #------------------------------------
 # Public Route Table 
-resource "aws_route_table" "public_route_table" {
+resource "aws_route_table" "public_route_table_b" {
   vpc_id = aws_vpc.vpc_a.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.ig.id
+    gateway_id = aws_internet_gateway.ig_b.id
   }
 
-  tags = merge(var.project-tags, { Name = "${var.resource-name-tag}-rtpub" }, )
+  tags = merge(var.ProjectTags, { Name = "${var.resource-name-tag}-rtpub" }, )
 }
 
 # Private Route Table 
 resource "aws_route_table" "private_route_table_b" {
-  vpc_id = aws_vpc.poc_vpc.id
+  vpc_id = aws_vpc.vpc_a.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    transit_gateway_id = var.tgw_id
+    nat_gateway_id = aws_nat_gateway.nat_gateway_b.id
   }
 
-  tags = merge(var.project-tags, { Name = "${var.resource-name-tag}-rtpriv" }, )
-}
-
-# PrivateDB Route Table 
-resource "aws_route_table" "privatedb_route_table_b" {
-  vpc_id = aws_vpc.poc_vpc.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.nat_gateway_a.id
-  }
-
-  tags = merge(var.project-tags, { Name = "${var.resource-name-tag}-DBpriv" }, )
+  tags = merge(var.ProjectTags, { Name = "${var.resource-name-tag}-rtpriv" }, )
 }
 
 # Public Subnets Association 
-resource "aws_route_table_association" "public" {
+resource "aws_route_table_association" "public_b" {
   count          = length(var.PublicSubnet-List)
   subnet_id      = aws_subnet.public_b[count.index].id
   route_table_id = aws_route_table.public_route_table_b.id
 }
 
 # Private Subnets Association
-resource "aws_route_table_association" "private" {
+resource "aws_route_table_association" "private_b" {
   count          = length(var.PrivateSubnet-List)
   subnet_id      = aws_subnet.private_b[count.index].id
   route_table_id = aws_route_table.private_route_table_b.id

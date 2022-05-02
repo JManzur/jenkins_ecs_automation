@@ -33,3 +33,6 @@ output "private_subnet_b" {
   description = "Private Subnets ID"
 }
 
+output "fastapi-alb-dns" {
+  value = "http://${aws_lb.fastapi-demo-alb.dns_name}:8082"
+}
