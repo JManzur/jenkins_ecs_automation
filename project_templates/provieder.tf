@@ -1,4 +1,4 @@
-# Previous execution of "aws configure" is needed
+# AWS provider version definition
 terraform {
   required_providers {
     aws = {
@@ -8,7 +8,17 @@ terraform {
   }
 }
 
+# Configure the AWS Provider
 provider "aws" {
-  region  = var.aws_region["virginia"]
-  profile = "magioss"
+  region  = var.aws_region
+  profile = var.aws_profile
+}
+
+# Create a VPC
+module "vpc" {
+  source       = "./modules/vpc"
+  ProjectTags  = var.ProjectTags
+  VPCTagPrefix = var.VPCTagPrefix
+  AWSRegion    = var.aws_region
+  VPC_CIDR     = var.VPC_CIDR
 }
